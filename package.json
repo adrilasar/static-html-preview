@@ -1,9 +1,9 @@
 {
   "name": "html-preview-codium",
   "displayName": "Static HTML Preview",
-  "description": "An offline, script-free HTML/CSS custom editor for local and remote files.",
-  "version": "0.1.0",
-  "publisher": "adrian-personal",
+  "description": "Edit HTML on the left with a live, offline preview on the right. Works locally and over SSH.",
+  "version": "0.2.0",
+  "publisher": "adrilasar",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -15,6 +15,7 @@
   "categories": [
     "Other"
   ],
+  "keywords": ["html", "preview", "offline", "ssh", "vscodium"],
   "main": "./dist/extension.js",
   "extensionKind": [
     "workspace"
@@ -28,7 +29,7 @@
   "contributes": {
     "customEditors": [
       {
-        "viewType": "adrian.staticHtmlPreview",
+        "viewType": "adrilasar.staticHtmlPreview",
         "displayName": "Static HTML Preview",
         "selector": [
           {
@@ -48,7 +49,7 @@
     "test": "npm run build && node --test --experimental-test-isolation=none test/preview.test.cjs",
     "test:editor": "npm test && node scripts/test-editor.mjs",
     "vscode:prepublish": "npm run build",
-    "package": "vsce package --no-dependencies --out html-preview-codium-0.1.0.vsix"
+    "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/css-tree": "3.2.0",

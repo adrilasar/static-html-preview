@@ -22,6 +22,10 @@ export class Resources {
 
   constructor(readonly root: vscode.Uri) {}
 
+  private name(uri: vscode.Uri): string {
+    return uri.path.slice(this.root.path.replace(/\/$/, '').length + 1);
+  }
+
   consume(bytes: number): void {
     this.renderedBytes += bytes;
     if (this.renderedBytes > MAX_RENDER_BYTES) {
@@ -78,6 +82,7 @@ export class Resources {
   }
 
   private async readChecked(uri: vscode.Uri): Promise<Uint8Array | undefined> {
+    let reason = 'file is missing or unreadable';
     try {
       // Inspect each component, including ancestors of the project root. Never
       // follow an advertised symlink, even when it points back inside the project.
@@ -85,20 +90,29 @@ export class Resources {
       for (let i = 1; i <= segments.length; i++) {
         const part = uri.with({ path: '/' + segments.slice(0, i).join('/'), query: '', fragment: '' });
         const stat = await this.stat(part);
-        if (stat.type & vscode.FileType.SymbolicLink) { throw new Error('Symbolic link'); }
+        if (stat.type & vscode.FileType.SymbolicLink) {
+          reason = 'symbolic links are blocked';
+          throw new Error(reason);
+        }
         if (i < segments.length && !(stat.type & vscode.FileType.Directory)) { throw new Error('Not a directory'); }
-        if (i === segments.length && (!(stat.type & vscode.FileType.File) || stat.size > MAX_FILE_BYTES)) {
-          throw new Error('Not a regular file or too large');
+        if (i === segments.length && !(stat.type & vscode.FileType.File)) {
+          reason = 'not a regular file';
+          throw new Error(reason);
+        }
+        if (i === segments.length && stat.size > MAX_FILE_BYTES) {
+          reason = 'file exceeds the 8 MiB limit';
+          throw new Error(reason);
         }
       }
       const bytes = await vscode.workspace.fs.readFile(uri);
       this.totalBytes += bytes.byteLength;
       if (bytes.byteLength > MAX_FILE_BYTES || this.totalBytes > MAX_TOTAL_BYTES) {
-        throw new Error('Resource size limit');
+        reason = 'resource size limit exceeded';
+        throw new Error(reason);
       }
       return bytes;
     } catch {
-      this.warnings.add('Some local resources could not be read (missing, symlink or size limit).');
+      this.warnings.add(`Could not load "${this.name(uri)}": ${reason}.`);
       return undefined;
     }
   }
@@ -109,7 +123,7 @@ export class Resources {
     const extension = uri.path.split('.').pop()?.toLowerCase() ?? '';
     const mime = MIME[extension];
     if (!mime) {
-      this.warnings.add('Blocked an unsupported image or font format.');
+      this.warnings.add(`Could not load "${this.name(uri)}": unsupported image or font format.`);
       return '';
     }
     const bytes = await this.read(uri);

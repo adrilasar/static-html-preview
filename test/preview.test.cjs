@@ -12,6 +12,8 @@ const reads = [];
 const changes = [];
 const saves = [];
 const watchers = [];
+const shownDocuments = [];
+const revealedColumns = [];
 let provider;
 const subscribe = (list, callback) => {
   list.push(callback);
@@ -20,6 +22,11 @@ const subscribe = (list, callback) => {
 const mock = {
   Uri: { parse: URI.parse, file: URI.file, joinPath: Utils.joinPath },
   FileType: { File: 1, Directory: 2, SymbolicLink: 64 },
+  ViewColumn: { One: 1, Two: 2 },
+  commands: { executeCommand: async (id, args) => {
+    if (id === 'workbench.action.newGroupRight') { mock.window.tabGroups.all.push({ viewColumn: 2 }); }
+    else { assert.equal(id, 'moveActiveEditor'); assert.deepEqual(args, { to: 'position', by: 'group', value: 2 }); revealedColumns.push(2); }
+  } },
   RelativePattern: class { constructor(base, pattern) { this.base = base; this.pattern = pattern; } },
   workspace: {
     fs: {
@@ -44,7 +51,12 @@ const mock = {
       return watcher;
     },
   },
-  window: { registerCustomEditorProvider: (id, p) => { assert.equal(id, 'adrian.staticHtmlPreview'); provider = p; return { dispose() {} }; } },
+  window: {
+    tabGroups: { all: [{ viewColumn: 1 }] },
+    showTextDocument: async (document, options) => { shownDocuments.push({ document, options }); },
+    onDidChangeActiveTextEditor: () => ({ dispose() {} }),
+    registerCustomEditorProvider: (id, p) => { assert.equal(id, 'adrilasar.staticHtmlPreview'); provider = p; return { dispose() {} }; },
+  },
 };
 const load = Module._load;
 Module._load = function(id, ...args) { return id === 'vscode' ? mock : load.call(this, id, ...args); };
@@ -166,6 +178,7 @@ test('Missing referenced files stay tracked so creation can refresh the preview'
   await render('<img src=../assets/missing.png>', uri, resources);
   assert.ok(resources.dependencies.has(Utils.joinPath(root, 'assets/missing.png').toString()));
   assert.ok(resources.warnings.size);
+  assert.ok([...resources.warnings].some(w => w.includes('assets/missing.png') && w.includes('missing or unreadable')));
 });
 
 test('Repeated embedding of a cached resource cannot expand the preview without a limit', async () => {
@@ -181,11 +194,14 @@ test('Provider registers, disables webview access, refreshes HTML/CSS and dispos
   let source = '<link rel=stylesheet href=theme.css><h1>First</h1>';
   const document = { uri, getText: () => source };
   let dispose;
-  const panel = { webview: { html: '', options: {} }, onDidDispose: cb => { dispose = cb; } };
+  const panel = { webview: { html: '', options: {} }, onDidDispose: cb => { dispose = cb; }, onDidChangeViewState: () => ({ dispose() {} }), reveal: column => revealedColumns.push(column) };
   activate({ subscriptions: [] });
   await provider.resolveCustomTextEditor(document, panel);
   assert.deepEqual(panel.webview.options, { enableScripts: false, enableForms: false, enableCommandUris: false, localResourceRoots: [] });
   assert.match(panel.webview.html, /First/);
+  assert.equal(mock.window.tabGroups.all.length, 2);
+  assert.equal(revealedColumns.at(-1), 2);
+  assert.equal(shownDocuments.at(-1).options.viewColumn, 1);
   source = '<link rel=stylesheet href=theme.css><h1>Changed</h1>';
   changes[0]({ document });
   await new Promise(r => setTimeout(r, 200));
@@ -202,8 +218,53 @@ test('Manifest provides HTML/HTM custom editor and workspace extension host', ()
   const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
   assert.equal(manifest.extensionKind[0], 'workspace');
   assert.equal(manifest.contributes.customEditors[0].priority, 'default');
-  assert.equal(manifest.contributes.customEditors[0].viewType, 'adrian.staticHtmlPreview');
+  assert.equal(manifest.contributes.customEditors[0].viewType, 'adrilasar.staticHtmlPreview');
   assert.equal(manifest.dependencies, undefined);
+  assert.equal(manifest.publisher, 'adrilasar');
+});
+
+test('Slow resource reads serialize updates and publish only the latest HTML', async () => {
+  const { root, uri } = setup();
+  put(root, 'pages/theme.css', 'h1{color:red}');
+  let source = '<link rel=stylesheet href=theme.css><h1>Initial</h1>';
+  const document = { uri, getText: () => source };
+  let dispose;
+  const panel = { webview: { html: '', options: {} }, onDidDispose: cb => { dispose = cb; }, onDidChangeViewState: () => ({ dispose() {} }), reveal() {} };
+  await provider.resolveCustomTextEditor(document, panel);
+  const originalRead = mock.workspace.fs.readFile;
+  let release;
+  let started;
+  const blocked = new Promise(resolve => { release = resolve; });
+  const entered = new Promise(resolve => { started = resolve; });
+  let active = 0;
+  let maximum = 0;
+  let first = true;
+  mock.workspace.fs.readFile = async resource => {
+    active++;
+    maximum = Math.max(maximum, active);
+    try {
+      if (first) { first = false; started(); await blocked; }
+      return await originalRead(resource);
+    } finally { active--; }
+  };
+  try {
+    source = '<link rel=stylesheet href=theme.css><h1>Outdated</h1>';
+    changes[0]({ document });
+    await entered;
+    source = '<link rel=stylesheet href=theme.css><h1>Latest</h1>';
+    changes[0]({ document });
+    await new Promise(resolve => setTimeout(resolve, 200));
+    assert.equal(maximum, 1);
+    assert.doesNotMatch(panel.webview.html, /Outdated/);
+    release();
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.match(panel.webview.html, /Latest/);
+    assert.equal(maximum, 1);
+  } finally {
+    release();
+    mock.workspace.fs.readFile = originalRead;
+    dispose();
+  }
 });
 
 test('Produce the exact renderer output for browser validation', async () => {
