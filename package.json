@@ -1,0 +1,65 @@
+{
+  "name": "html-preview-codium",
+  "displayName": "Static HTML Preview",
+  "description": "An offline, script-free HTML/CSS custom editor for local and remote files.",
+  "version": "0.1.0",
+  "publisher": "adrian-personal",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adrilasar/html-preview-codium.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "adrian.staticHtmlPreview",
+        "displayName": "Static HTML Preview",
+        "selector": [
+          {
+            "filenamePattern": "*.[hH][tT][mM][lL]"
+          },
+          {
+            "filenamePattern": "*.[hH][tT][mM]"
+          }
+        ],
+        "priority": "default"
+      }
+    ]
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "npm run check && node scripts/build.mjs",
+    "test": "npm run build && node --test --experimental-test-isolation=none test/*.test.cjs",
+    "test:editor": "npm test && node scripts/test-editor.mjs",
+    "vscode:prepublish": "npm run build",
+    "package": "vsce package --no-dependencies --out html-preview-codium-0.1.0.vsix"
+  },
+  "devDependencies": {
+    "@types/css-tree": "3.2.0",
+    "@types/node": "22.20.5",
+    "@types/vscode": "1.85.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0",
+    "css-tree": "3.2.1",
+    "esbuild": "0.28.2",
+    "parse5": "7.3.0",
+    "typescript": "7.0.2",
+    "vscode-uri": "3.2.0"
+  }
+}
