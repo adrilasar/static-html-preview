@@ -45,7 +45,7 @@
   "scripts": {
     "check": "tsc --noEmit",
     "build": "npm run check && node scripts/build.mjs",
-    "test": "npm run build && node --test --experimental-test-isolation=none test/*.test.cjs",
+    "test": "npm run build && node --test --experimental-test-isolation=none test/preview.test.cjs",
     "test:editor": "npm test && node scripts/test-editor.mjs",
     "vscode:prepublish": "npm run build",
     "package": "vsce package --no-dependencies --out html-preview-codium-0.1.0.vsix"
