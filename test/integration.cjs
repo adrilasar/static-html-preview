@@ -138,6 +138,7 @@ exports.run = async function() {
   } finally {
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
     await editorConfiguration.update('openSideBySideDirection', previousDirection, vscode.ConfigurationTarget.Global);
-    await rm(directory, { recursive: true, force: true });
+    // Windows can retain watcher/antivirus handles briefly after closing tabs.
+    await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 };
