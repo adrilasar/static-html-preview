@@ -2,6 +2,7 @@ import { runTests } from '@vscode/test-electron';
 import { resolve } from 'node:path';
 
 await runTests({
+  version: process.env.HTML_PREVIEW_EDITOR_VERSION ?? 'stable',
   ...(process.env.HTML_PREVIEW_EDITOR ? { vscodeExecutablePath: process.env.HTML_PREVIEW_EDITOR } : {}),
   extensionDevelopmentPath: resolve('.'),
   extensionTestsPath: resolve('test/integration.cjs'),

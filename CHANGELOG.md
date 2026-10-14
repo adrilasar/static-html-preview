@@ -8,6 +8,7 @@
 - Use the `adrilasar` publisher and editor identifier.
 - Serialize preview updates and identify resources that cannot be loaded.
 - Package each version under its own VSIX filename.
+- Verify the minimum supported VS Code 1.85.0 and latest stable release on Linux and Windows.
 
 ## 0.1.0
 

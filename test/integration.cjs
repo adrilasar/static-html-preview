@@ -90,7 +90,7 @@ exports.run = async function() {
     assert.match(await render(document.getText(), uri, new Resources(root)), /Updated preview/);
     results.push('Custom and text views share the editable document and save successfully.');
 
-    await symlink(path.join(directory, 'assets'), path.join(directory, 'linked'));
+    await symlink(path.join(directory, 'assets'), path.join(directory, 'linked'), 'dir');
     const resources = new Resources(root);
     assert.equal(await resources.asset('linked/pixel.svg', uri), '');
     assert.ok(resources.warnings.size);
