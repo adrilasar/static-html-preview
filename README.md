@@ -1,27 +1,30 @@
 # Static HTML Preview
 
-Edit HTML on the left and see its rendered preview on the right in VSCodium.
-Works with local files and projects opened over SSH.
+Preview static HTML in VSCodium and VS Code while you edit. Open an `.html` or
+`.htm` file to see its source on the left and a live preview on the right.
 
-## Usage
+## Features
 
-Install the VSIX using **Extensions: Install from VSIX…**. For SSH projects,
-install it in the remote extension host too.
+- Inline styles and relative stylesheets, images and fonts.
+- Local files and SSH workspaces.
+- Live HTML updates as you type; resource updates when saved.
+- No HTTP server, telemetry or Internet resource loading.
 
-Open an `.html` or `.htm` file. The extension opens both views and keeps the
-preview updated as you edit. Relative CSS, images and fonts are supported;
-changes to those files appear after saving.
+## Getting started
 
-Use **Reopen Editor With… → Static HTML Preview** if another editor is selected.
-Close the preview to keep working with source only.
+Open an HTML file from the Explorer. If it opens as text, use **Reopen Editor
+With…** to select **Static HTML Preview** and configure it as the default editor.
+Close the preview whenever you want to work with source only.
 
-## Static and offline
+For SSH workspaces, install the extension on the remote host.
 
-No telemetry or HTTP server. JavaScript, navigation and Internet resources are
-blocked. Resources must stay within the containing workspace folder (or the
-HTML's directory when no workspace is open); symbolic links are blocked.
+## Limitations
 
-Forms, inline SVG, embedded pages, `srcset` and absolute resource URLs are omitted.
-Large documents and resources have limits. This is a preview of static HTML/CSS.
+Designed for static HTML/CSS. JavaScript and navigation are disabled. Forms,
+inline SVG, embedded pages, `srcset` and absolute resource URLs are unsupported.
+SVG image files are supported.
 
-[Source and issues](https://github.com/adrilasar/html-preview-codium) · [MIT license](LICENSE)
+Resources must stay inside the workspace folder, or the HTML file's directory
+when no folder is open. Symbolic links are blocked; size limits apply.
+
+[Report an issue](https://github.com/adrilasar/html-preview-codium/issues) · [MIT license](LICENSE)
