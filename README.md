@@ -27,4 +27,4 @@ SVG image files are supported.
 Resources must stay inside the workspace folder, or the HTML file's directory
 when no folder is open. Symbolic links are blocked; size limits apply.
 
-[Report an issue](https://github.com/adrilasar/html-preview-codium/issues) · [MIT license](LICENSE)
+[Report an issue](https://github.com/adrilasar/static-html-preview/issues) · [MIT license](LICENSE)

@@ -2,6 +2,7 @@
 
 ## 0.2.0
 
+- Use the `static-html-preview` extension and repository name.
 - Open HTML source on the left and its live preview on the right.
 - Reuse the two editor groups when opening more HTML files.
 - Use the `adrilasar` publisher and editor identifier.

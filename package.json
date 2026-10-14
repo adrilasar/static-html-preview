@@ -1,5 +1,5 @@
 {
-  "name": "html-preview-codium",
+  "name": "static-html-preview",
   "displayName": "Static HTML Preview",
   "description": "Edit HTML on the left with a live, offline preview on the right. Works locally and over SSH.",
   "version": "0.2.0",
@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adrilasar/html-preview-codium.git"
+    "url": "https://github.com/adrilasar/static-html-preview.git"
   },
   "engines": {
     "vscode": "^1.85.0"
