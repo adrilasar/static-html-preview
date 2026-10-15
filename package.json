@@ -3,6 +3,7 @@
   "displayName": "Static HTML Preview",
   "description": "Edit HTML on the left with a live, offline preview on the right. Works locally and over SSH.",
   "version": "0.2.0",
+  "icon": "assets/icon.png",
   "publisher": "adrilasar",
   "license": "MIT",
   "repository": {
