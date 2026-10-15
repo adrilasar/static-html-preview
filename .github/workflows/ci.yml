@@ -4,6 +4,7 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -24,6 +25,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Release package checks
+        run: python -m unittest discover -s test -p release_test.py
       - name: Real editor integration
         if: runner.os == 'Linux'
         run: xvfb-run -a node scripts/test-editor.mjs
