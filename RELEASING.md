@@ -31,8 +31,12 @@ Create an Azure DevOps PAT for the Microsoft account that owns publisher
 following [Microsoft's instructions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#get-a-personal-access-token).
 Store it as the **VSCE_PAT** secret in the GitHub **publish** environment.
 Never put the PAT in a file, issue, PR or chat. Renew it before expiry.
-An Azure DevOps organization can be created for free if the account does not
-already have one; this does not require an Azure subscription or payment card.
+A PAT requires access to an Azure DevOps organization. Check for an existing
+organization first: [creating a new organization now requires an active Azure
+subscription](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/create-organization).
+The free service tier does not remove that account requirement. If this blocks
+PAT creation, keep uploading the verified VSIX manually to Microsoft until an
+appropriate account or supported native trusted publishing is available.
 
 This is an interim authentication method: Microsoft announces retirement of
 global Azure DevOps PATs on **December 1, 2026**. Direct Marketplace trusted
