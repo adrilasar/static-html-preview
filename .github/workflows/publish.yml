@@ -74,9 +74,12 @@ jobs:
         run: gh release upload "$RELEASE_TAG" release/* --clobber
       - name: Record the package checksum
         run: cat release/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
+      - name: Note manual Microsoft publication
+        if: github.event_name == 'release' && vars.PUBLISH_MICROSOFT != 'true'
+        run: echo 'Upload the VSIX attached to this release to Visual Studio Marketplace manually.' >> "$GITHUB_STEP_SUMMARY"
 
   microsoft:
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' && vars.PUBLISH_MICROSOFT == 'true'
     needs: package
     runs-on: ubuntu-latest
     timeout-minutes: 10
