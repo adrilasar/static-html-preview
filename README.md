@@ -1,6 +1,9 @@
 # Static HTML Preview
 
-Preview static HTML in VSCodium and VS Code while you edit. Open an `.html` or
+[![Available on Visual Studio Marketplace](https://img.shields.io/badge/Visual_Studio_Marketplace-Install-0078D4?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=adrilasar.static-html-preview)
+[![Available on Open VSX](https://img.shields.io/badge/Open_VSX-Install-A60EE5?style=for-the-badge)](https://open-vsx.org/extension/adrilasar/static-html-preview)
+
+Preview static HTML while you edit. Open an `.html` or
 `.htm` file to see its source on the left and a live preview on the right.
 
 ## Features
