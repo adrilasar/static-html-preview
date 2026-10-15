@@ -1,0 +1,92 @@
+name: Publish extension
+
+on:
+  release:
+    types: [published]
+  # Manual runs only validate and package; they never publish.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    uses: ./.github/workflows/ci.yml
+
+  package:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      vsix: ${{ steps.prepare.outputs.vsix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require a release from main
+        if: github.event_name == 'release'
+        run: git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: html-preview-Linux
+          path: verified
+      - name: Validate and prepare the shared VSIX
+        id: prepare
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: python scripts/prepare-release.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-vsix
+          path: release/*
+          if-no-files-found: error
+      - name: Attach verified package to the GitHub release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" release/* --clobber
+      - name: Record the package checksum
+        run: cat release/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
+      - name: Note manual Microsoft publication
+        if: github.event_name == 'release'
+        run: echo 'Upload the VSIX attached to this release to Visual Studio Marketplace manually.' >> "$GITHUB_STEP_SUMMARY"
+
+  open-vsx:
+    if: github.event_name == 'release'
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: release-vsix
+          path: release
+      - name: Verify package checksum
+        working-directory: release
+        run: sha256sum --check SHA256SUMS
+      - name: Publish to Open VSX
+        env:
+          VSIX: ${{ needs.package.outputs.vsix }}
+        run: ./node_modules/.bin/ovsx publish "release/$VSIX" --trusted-publishing --skip-duplicate
